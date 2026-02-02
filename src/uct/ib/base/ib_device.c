@@ -1206,7 +1206,7 @@ uct_ib_device_select_gid(uct_ib_device_t *dev, uint8_t port_num,
                                                   uct_ib_device_name(dev),
                                                   port_num, i, &gid_info_tmp);
             if (status != UCS_OK) {
-                goto out;
+                continue;
             }
 
             if ((roce_prio[prio_idx].info.ver         == gid_info_tmp.roce_info.ver) &&

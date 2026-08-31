@@ -266,8 +266,9 @@ uct_tcp_iface_is_reachable_v2(const uct_iface_h tl_iface,
         return 0;
     }
 
-    if (!ucs_netlink_is_best_route(ndev_index,
-                                   (const struct sockaddr*)&remote_addr)) {
+    if (!ucs_netlink_is_best_route_by_table(ndev_index,
+                                   (const struct sockaddr*)&remote_addr,
+                                   RT_TABLE_UNSPEC)) {
         uct_iface_fill_info_str_buf(
                     params, "no route to %s",
                     ucs_sockaddr_str((const struct sockaddr *)&remote_addr,

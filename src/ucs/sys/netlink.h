@@ -100,6 +100,21 @@ int ucs_netlink_get_local_route_ndev_index(const struct sockaddr *sa_remote);
 int ucs_netlink_is_best_route(int if_index, const struct sockaddr *sa_remote);
 
 /**
+ * Check if this network interface has the best route to the destination
+ * address in a given routing table.
+ *
+ * @param [in] if_index         Network interface index.
+ * @param [in] sa_remote        Pointer to the destination address.
+ * @param [in] table_id         Routing table ID, or RT_TABLE_UNSPEC to search
+ *                              all routing tables.
+ *
+ * @return 1 if this network interface has the best route to the destination
+ *         address, or 0 otherwise.
+ */
+int ucs_netlink_is_best_route_by_table(
+        int if_index, const struct sockaddr *sa_remote, uint32_t table_id);
+
+/**
  * Get VRF information associated with a network interface.
  *
  * @param [in]  if_index         Network interface index to query.

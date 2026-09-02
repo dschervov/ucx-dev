@@ -461,8 +461,24 @@ ucs_status_t ucs_socket_set_buffer_size(int fd, size_t sockopt_sndbuf,
 }
 
 ucs_status_t ucs_socket_server_init(const struct sockaddr *saddr, socklen_t socklen,
-                                    int backlog, int silent_err_in_use,
+                                    int backlog, int silent_bind,
                                     int reuse_addr, int *listen_fd)
+{
+    ucs_socket_options_t server_params = {
+        .reuse_addr  = reuse_addr,
+        .bind_device = NULL
+    };
+
+    return ucs_socket_server_init_v2(saddr, socklen, backlog,
+                                     silent_bind, &server_params,
+                                     listen_fd);
+}
+
+ucs_status_t
+ucs_socket_server_init_v2(const struct sockaddr *saddr, socklen_t socklen,
+                          int backlog, int silent_bind,
+                          const ucs_socket_options_t *socket_params,
+                          int *listen_fd)
 {
     int so_reuse_optval = 1;
     char ip_port_str[UCS_SOCKADDR_STRING_LEN];
@@ -483,7 +499,7 @@ ucs_status_t ucs_socket_server_init(const struct sockaddr *saddr, socklen_t sock
         goto err_close_socket;
     }
 
-    if (reuse_addr) {
+    if (socket_params->reuse_addr) {
         status = ucs_socket_setopt(fd, SOL_SOCKET, SO_REUSEADDR,
                                    &so_reuse_optval, sizeof(so_reuse_optval));
         if (status != UCS_OK) {
@@ -491,9 +507,18 @@ ucs_status_t ucs_socket_server_init(const struct sockaddr *saddr, socklen_t sock
         }
     }
 
+    if (socket_params->bind_device != NULL) {
+        status = ucs_socket_setopt(fd, SOL_SOCKET, SO_BINDTODEVICE,
+                                   socket_params->bind_device,
+                                   strlen(socket_params->bind_device) + 1);
+        if (status != UCS_OK) {
+            goto err_close_socket;
+        }
+    }
+
     ret = bind(fd, saddr, socklen);
     if (ret < 0) {
-        if ((errno == EADDRINUSE) && silent_err_in_use) {
+        if ((errno == EADDRINUSE) && silent_bind) {
             bind_log_level = UCS_LOG_LEVEL_DEBUG;
         } else {
             bind_log_level = UCS_LOG_LEVEL_ERROR;
